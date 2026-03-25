@@ -59,6 +59,22 @@
       100% { transform: rotate(360deg) scale(1.06); }
     }
 
+    /* ─── 音量ボタン ─── */
+    .sound-btn {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      background: rgba(255,255,255,0.85);
+      border: none;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      font-size: 22px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      z-index: 100;
+    }
+
     /* ─── 価格バッジ ─── */
     .price-badge {
       display: inline-block;
@@ -176,6 +192,8 @@
 </head>
 <body>
 
+<button class="sound-btn" id="soundBtn" onclick="toggleSound()">🔊</button>
+
 <div class="container">
   <h1>🍗 デカ盛りガチャ</h1>
   <p class="subtitle">ハズレなし！全員何かもらえる</p>
@@ -213,49 +231,250 @@
 </div>
 
 <script>
-  let spinning = false;
+// ══════════════════════════════════════════════
+//  Audio Engine
+// ══════════════════════════════════════════════
+let ctx = null;
+let bgmNodes = [];
+let drumNodes = [];
+let muted = false;
+let bgmStarted = false;
 
-  function spin() {
-    if (spinning) return;
-    spinning = true;
+function getCtx() {
+  if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+  return ctx;
+}
 
-    const ball = document.getElementById('ball');
-    const btn  = document.getElementById('spinBtn');
-    ball.classList.add('spinning');
-    btn.disabled    = true;
-    btn.textContent = '回転中…';
+// ── BGM ──────────────────────────────────────
+// 明るいループメロディ（C メジャー）
+const BGM_NOTES = [523, 659, 784, 880, 784, 659, 523, 587,
+                   659, 784, 880, 1047, 880, 784, 659, 523];
+const BGM_BPM   = 140;
+const BGM_STEP  = 60 / BGM_BPM;
 
-    fetch('/spin', { method: 'POST' })
-      .then(r => r.json())
-      .then(result => {
-        setTimeout(() => {
-          ball.classList.remove('spinning');
-          ball.textContent = result.emoji;
+function startBGM() {
+  if (muted || bgmStarted) return;
+  bgmStarted = true;
+  const ac = getCtx();
 
-          document.getElementById('rEmoji').textContent    = result.emoji;
-          document.getElementById('rName').textContent     = result.name;
-          document.getElementById('rName').style.color     = result.color;
-          document.getElementById('rDesc').textContent     = result.description;
+  function scheduleLoop(startTime) {
+    BGM_NOTES.forEach((freq, i) => {
+      const t = startTime + i * BGM_STEP * 0.5;
 
-          const couponBtn = document.getElementById('rCoupon');
-          if (result.coupon_url) {
-            couponBtn.href         = result.coupon_url;
-            couponBtn.style.display = 'block';
-          } else {
-            couponBtn.style.display = 'none';
-          }
+      // メロディ
+      const osc  = ac.createOscillator();
+      const gain = ac.createGain();
+      osc.type = 'square';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.07, t + 0.01);
+      gain.gain.linearRampToValueAtTime(0, t + BGM_STEP * 0.45);
+      osc.connect(gain); gain.connect(ac.destination);
+      osc.start(t); osc.stop(t + BGM_STEP * 0.5);
+      bgmNodes.push(osc, gain);
 
-          document.getElementById('overlay').classList.add('show');
-          btn.disabled    = false;
-          btn.textContent = 'もう一度回す！';
-          spinning = false;
-        }, 1800);
-      });
+      // ベース（1オクターブ下、偶数ステップ）
+      if (i % 2 === 0) {
+        const bass  = ac.createOscillator();
+        const bgain = ac.createGain();
+        bass.type = 'sawtooth';
+        bass.frequency.value = freq / 2;
+        bgain.gain.setValueAtTime(0, t);
+        bgain.gain.linearRampToValueAtTime(0.05, t + 0.01);
+        bgain.gain.linearRampToValueAtTime(0, t + BGM_STEP * 0.9);
+        bass.connect(bgain); bgain.connect(ac.destination);
+        bass.start(t); bass.stop(t + BGM_STEP);
+        bgmNodes.push(bass, bgain);
+      }
+    });
+
+    const loopDur = BGM_NOTES.length * BGM_STEP * 0.5;
+    if (!muted && bgmStarted) {
+      setTimeout(() => scheduleLoop(ac.currentTime + 0.05), (loopDur - 0.1) * 1000);
+    }
   }
 
-  function closeResult() {
-    document.getElementById('overlay').classList.remove('show');
+  scheduleLoop(ac.currentTime + 0.1);
+}
+
+function stopBGM() {
+  bgmStarted = false;
+  bgmNodes.forEach(n => { try { n.disconnect(); } catch(e){} });
+  bgmNodes = [];
+}
+
+// ── ドラムロール ─────────────────────────────
+function playDrumRoll(duration) {
+  if (muted) return;
+  const ac = getCtx();
+  const count = Math.floor(duration * 18);
+
+  for (let i = 0; i < count; i++) {
+    const progress = i / count;
+    const t = ac.currentTime + (i / count) * duration;
+
+    // スネア（ホワイトノイズ）
+    const bufSize = ac.sampleRate * 0.04;
+    const buf  = ac.createBuffer(1, bufSize, ac.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let j = 0; j < bufSize; j++) data[j] = (Math.random() * 2 - 1);
+
+    const src    = ac.createBufferSource();
+    const filter = ac.createBiquadFilter();
+    const gain   = ac.createGain();
+
+    src.buffer = buf;
+    filter.type = 'bandpass';
+    filter.frequency.value = 2000 + progress * 2000;
+    filter.Q.value = 0.8;
+
+    const vol = 0.08 + progress * 0.25;
+    gain.gain.setValueAtTime(vol, t);
+    gain.gain.linearRampToValueAtTime(0, t + 0.035);
+
+    src.connect(filter); filter.connect(gain); gain.connect(ac.destination);
+    src.start(t); src.stop(t + 0.04);
+    drumNodes.push(src, filter, gain);
   }
+}
+
+function stopDrum() {
+  drumNodes.forEach(n => { try { n.disconnect(); } catch(e){} });
+  drumNodes = [];
+}
+
+// ── 結果音 ───────────────────────────────────
+function playResultSound(prizeId) {
+  if (muted) return;
+  const ac = getCtx();
+  const t  = ac.currentTime;
+
+  if (prizeId === 'jackpot') {
+    // コメディ：上昇→下降「わ〜お」
+    const notes = [400, 500, 650, 800, 650, 500, 350, 280];
+    notes.forEach((freq, i) => {
+      const osc = ac.createOscillator();
+      const g   = ac.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.value = freq;
+      g.gain.setValueAtTime(0.18, t + i * 0.09);
+      g.gain.linearRampToValueAtTime(0, t + i * 0.09 + 0.08);
+      osc.connect(g); g.connect(ac.destination);
+      osc.start(t + i * 0.09); osc.stop(t + i * 0.09 + 0.1);
+    });
+
+  } else if (prizeId === 'hit') {
+    // ファンファーレ
+    const fanfare = [523, 659, 784, 1047, 784, 1047];
+    fanfare.forEach((freq, i) => {
+      const osc = ac.createOscillator();
+      const g   = ac.createGain();
+      osc.type = 'square';
+      osc.frequency.value = freq;
+      g.gain.setValueAtTime(0.15, t + i * 0.12);
+      g.gain.linearRampToValueAtTime(0, t + i * 0.12 + 0.1);
+      osc.connect(g); g.connect(ac.destination);
+      osc.start(t + i * 0.12); osc.stop(t + i * 0.12 + 0.12);
+    });
+
+  } else if (prizeId === 'participation') {
+    // 明るいチャイム
+    [1047, 1319, 1568].forEach((freq, i) => {
+      const osc = ac.createOscillator();
+      const g   = ac.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      g.gain.setValueAtTime(0.2, t + i * 0.18);
+      g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.18 + 0.5);
+      osc.connect(g); g.connect(ac.destination);
+      osc.start(t + i * 0.18); osc.stop(t + i * 0.18 + 0.5);
+    });
+
+  } else {
+    // ハズレ：下降音
+    [440, 370, 311, 262].forEach((freq, i) => {
+      const osc = ac.createOscillator();
+      const g   = ac.createGain();
+      osc.type = 'triangle';
+      osc.frequency.value = freq;
+      g.gain.setValueAtTime(0.12, t + i * 0.1);
+      g.gain.linearRampToValueAtTime(0, t + i * 0.1 + 0.09);
+      osc.connect(g); g.connect(ac.destination);
+      osc.start(t + i * 0.1); osc.stop(t + i * 0.1 + 0.1);
+    });
+  }
+}
+
+function toggleSound() {
+  muted = !muted;
+  document.getElementById('soundBtn').textContent = muted ? '🔇' : '🔊';
+  if (muted) {
+    stopBGM();
+  } else if (!spinning) {
+    startBGM();
+  }
+}
+
+// ── 初回タップでBGM開始（ブラウザポリシー対応）────
+document.addEventListener('click', () => {
+  if (!bgmStarted && !muted) startBGM();
+}, { once: true });
+
+// ══════════════════════════════════════════════
+//  Gacha Logic
+// ══════════════════════════════════════════════
+let spinning = false;
+
+function spin() {
+  if (spinning) return;
+  spinning = true;
+
+  stopBGM();
+
+  const ball = document.getElementById('ball');
+  const btn  = document.getElementById('spinBtn');
+  ball.classList.add('spinning');
+  btn.disabled    = true;
+  btn.textContent = '回転中…';
+
+  const spinDur = 1.8;
+  playDrumRoll(spinDur);
+
+  fetch('/spin', { method: 'POST' })
+    .then(r => r.json())
+    .then(result => {
+      setTimeout(() => {
+        stopDrum();
+        ball.classList.remove('spinning');
+        ball.textContent = result.emoji;
+
+        playResultSound(result.id);
+
+        document.getElementById('rEmoji').textContent = result.emoji;
+        document.getElementById('rName').textContent  = result.name;
+        document.getElementById('rName').style.color  = result.color;
+        document.getElementById('rDesc').textContent  = result.description;
+
+        const couponBtn = document.getElementById('rCoupon');
+        if (result.coupon_url) {
+          couponBtn.href          = result.coupon_url;
+          couponBtn.style.display = 'block';
+        } else {
+          couponBtn.style.display = 'none';
+        }
+
+        document.getElementById('overlay').classList.add('show');
+        btn.disabled    = false;
+        btn.textContent = 'もう一度回す！';
+        spinning = false;
+      }, spinDur * 1000);
+    });
+}
+
+function closeResult() {
+  document.getElementById('overlay').classList.remove('show');
+  if (!muted) startBGM();
+}
 </script>
 
 </body>
