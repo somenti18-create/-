@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>デカ盛りガチャ 🍗</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(160deg, #FF6B35 0%, #FF8C00 50%, #FFD700 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 28px;
+      padding: 32px 24px 28px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+    }
+
+    h1 { font-size: 26px; color: #FF4500; margin-bottom: 4px; }
+    .subtitle { color: #888; font-size: 13px; margin-bottom: 20px; }
+
+    /* ─── ガチャボール ─── */
+    .ball-wrap {
+      position: relative;
+      width: 160px;
+      height: 160px;
+      margin: 0 auto 20px;
+    }
+    .ball {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #fff5cc, #FF8C00 60%, #cc4400);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 64px;
+      box-shadow: 0 6px 20px rgba(255,140,0,0.45), inset 0 -4px 8px rgba(0,0,0,0.15);
+      transition: transform 0.2s;
+      user-select: none;
+    }
+    .ball.spinning {
+      animation: roll 0.4s linear infinite;
+    }
+    @keyframes roll {
+      0%   { transform: rotate(0deg)   scale(1.06); }
+      100% { transform: rotate(360deg) scale(1.06); }
+    }
+
+    /* ─── 価格バッジ ─── */
+    .price-badge {
+      display: inline-block;
+      background: #FF4500;
+      color: white;
+      border-radius: 20px;
+      padding: 5px 20px;
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 18px;
+    }
+
+    /* ─── 景品一覧 ─── */
+    .prizes {
+      background: #FFF8F0;
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    .prizes h3 {
+      font-size: 12px;
+      color: #aaa;
+      text-align: center;
+      margin-bottom: 10px;
+      letter-spacing: 1px;
+    }
+    .prize-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 7px 0;
+      font-size: 13px;
+      border-bottom: 1px solid #FFE0C0;
+    }
+    .prize-row:last-child { border-bottom: none; }
+    .prize-row .name { color: #333; flex: 1; }
+    .prize-row .prob { color: #FF8C00; font-weight: bold; white-space: nowrap; margin-left: 8px; }
+
+    /* ─── ボタン ─── */
+    .spin-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #FF4500, #FF8C00);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 17px;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(255,69,0,0.4);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .spin-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 7px 22px rgba(255,69,0,0.5);
+    }
+    .spin-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+    /* ─── 結果オーバーレイ ─── */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .overlay.show { display: flex; animation: fadeIn 0.25s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .result-card {
+      background: white;
+      border-radius: 24px;
+      padding: 36px 28px 28px;
+      max-width: 320px;
+      width: 100%;
+      text-align: center;
+      animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes popIn {
+      from { transform: scale(0.4); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+
+    .result-emoji { font-size: 80px; margin-bottom: 14px; }
+    .result-name  { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+    .result-desc  { font-size: 15px; color: #555; line-height: 1.6; margin-bottom: 22px; white-space: pre-line; }
+
+    .coupon-btn {
+      display: block;
+      background: linear-gradient(135deg, #FF4500, #FF8C00);
+      color: white;
+      text-decoration: none;
+      border-radius: 50px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .close-btn {
+      width: 100%;
+      background: #eee;
+      border: none;
+      border-radius: 50px;
+      padding: 13px;
+      font-size: 15px;
+      color: #666;
+      cursor: pointer;
+    }
+    .close-btn:hover { background: #ddd; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🍗 デカ盛りガチャ</h1>
+  <p class="subtitle">ハズレなし！全員何かもらえる</p>
+
+  <div class="ball-wrap">
+    <div class="ball" id="ball">🎰</div>
+  </div>
+
+  <div class="price-badge">1回 500円</div>
+
+  <div class="prizes">
+    <h3>景品一覧</h3>
+    {% for p in prizes %}
+    <div class="prize-row">
+      <span class="name">{{ p.emoji }} {{ p.name }}　{{ p.description.split('\n')[0] }}</span>
+      <span class="prob">{{ p.weight }}%</span>
+    </div>
+    {% endfor %}
+  </div>
+
+  <button class="spin-btn" id="spinBtn" onclick="spin()">ガチャを回す！</button>
+</div>
+
+<!-- 結果ポップアップ -->
+<div class="overlay" id="overlay">
+  <div class="result-card">
+    <div class="result-emoji" id="rEmoji"></div>
+    <div class="result-name"  id="rName"></div>
+    <div class="result-desc"  id="rDesc"></div>
+    <a class="coupon-btn" id="rCoupon" href="#" target="_blank" style="display:none">
+      クーポンを受け取る 🎁
+    </a>
+    <button class="close-btn" onclick="closeResult()">閉じる</button>
+  </div>
+</div>
+
+<script>
+  let spinning = false;
+
+  function spin() {
+    if (spinning) return;
+    spinning = true;
+
+    const ball = document.getElementById('ball');
+    const btn  = document.getElementById('spinBtn');
+    ball.classList.add('spinning');
+    btn.disabled    = true;
+    btn.textContent = '回転中…';
+
+    fetch('/spin', { method: 'POST' })
+      .then(r => r.json())
+      .then(result => {
+        setTimeout(() => {
+          ball.classList.remove('spinning');
+          ball.textContent = result.emoji;
+
+          document.getElementById('rEmoji').textContent    = result.emoji;
+          document.getElementById('rName').textContent     = result.name;
+          document.getElementById('rName').style.color     = result.color;
+          document.getElementById('rDesc').textContent     = result.description;
+
+          const couponBtn = document.getElementById('rCoupon');
+          if (result.coupon_url) {
+            couponBtn.href         = result.coupon_url;
+            couponBtn.style.display = 'block';
+          } else {
+            couponBtn.style.display = 'none';
+          }
+
+          document.getElementById('overlay').classList.add('show');
+          btn.disabled    = false;
+          btn.textContent = 'もう一度回す！';
+          spinning = false;
+        }, 1800);
+      });
+  }
+
+  function closeResult() {
+    document.getElementById('overlay').classList.remove('show');
+  }
+</script>
+
+</body>
+</html>
