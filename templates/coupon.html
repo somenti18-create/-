@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>クーポン | デカ盛り弁当はるき</title>
+  <link href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&family=M+PLUS+Rounded+1c:wght@900&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(160deg, #FFD700 0%, #FFC200 50%, #FFB300 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      font-family: 'M PLUS Rounded 1c', sans-serif;
+    }
+    .card {
+      background: white;
+      border-radius: 24px;
+      padding: 36px 28px 32px;
+      max-width: 360px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    }
+    .logo {
+      width: 140px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+    .prize-img {
+      width: 100%;
+      max-height: 200px;
+      object-fit: cover;
+      border-radius: 14px;
+      margin-bottom: 16px;
+    }
+    .prize-name {
+      font-size: 30px;
+      font-family: 'Yuji Syuku', serif;
+      margin-bottom: 10px;
+    }
+    .prize-desc {
+      font-size: 16px;
+      font-weight: 900;
+      color: #555;
+      line-height: 1.7;
+      margin-bottom: 24px;
+      white-space: pre-line;
+    }
+
+    /* 使用済み */
+    .used-badge {
+      background: #eee;
+      color: #999;
+      border-radius: 50px;
+      padding: 16px;
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+
+    /* 受け取りボタン */
+    .receive-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #FF4500, #FF8C00);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 16px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 12px;
+    }
+    .receive-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* PINモーダル */
+    .pin-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+    }
+    .pin-modal.show { display: flex; }
+    .pin-card {
+      background: white;
+      border-radius: 20px;
+      padding: 28px 24px;
+      max-width: 300px;
+      width: 90%;
+      text-align: center;
+    }
+    .pin-title { font-size: 16px; font-weight: bold; margin-bottom: 16px; color: #333; }
+    .pin-input {
+      width: 100%;
+      font-size: 28px;
+      text-align: center;
+      letter-spacing: 8px;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 14px;
+    }
+    .pin-submit {
+      width: 100%;
+      background: #FF4500;
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 13px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+    .pin-cancel {
+      width: 100%;
+      background: #eee;
+      border: none;
+      border-radius: 50px;
+      padding: 12px;
+      font-size: 14px;
+      color: #666;
+      cursor: pointer;
+    }
+    .pin-msg { font-size: 14px; color: #FF4500; margin-top: 10px; min-height: 20px; }
+    .note { font-size: 12px; color: #aaa; margin-top: 8px; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <img class="logo" src="/static/logo.jpg" alt="デカ盛り弁当はるき">
+
+  {% if coupon['prize_image'] %}
+  <img class="prize-img" src="{{ coupon['prize_image'] }}" alt="{{ coupon['prize_name'] }}">
+  {% endif %}
+
+  <div class="prize-name" style="color: {{ coupon['prize_color'] }}">{{ coupon['prize_name'] }}</div>
+  <div class="prize-desc">{{ coupon['prize_desc'] }}</div>
+
+  {% if coupon['used'] %}
+    <div class="used-badge">このクーポンは使用済みです</div>
+  {% else %}
+    <button class="receive-btn" id="receiveBtn" onclick="openPinModal()">お店で受け取る 🎁</button>
+    <div class="note">お店のスタッフにこの画面を見せてください</div>
+  {% endif %}
+</div>
+
+<!-- PINモーダル -->
+<div class="pin-modal" id="pinModal">
+  <div class="pin-card">
+    <div class="pin-title">スタッフがPINを入力してください</div>
+    <input class="pin-input" id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="●●●●">
+    <button class="pin-submit" onclick="submitPin()">確定</button>
+    <button class="pin-cancel" onclick="closePinModal()">キャンセル</button>
+    <div class="pin-msg" id="pinMsg"></div>
+  </div>
+</div>
+
+<script>
+const COUPON_CODE = "{{ coupon['code'] }}";
+
+function openPinModal() {
+  document.getElementById('pinInput').value = '';
+  document.getElementById('pinMsg').textContent = '';
+  document.getElementById('pinModal').classList.add('show');
+  setTimeout(() => document.getElementById('pinInput').focus(), 100);
+}
+
+function closePinModal() {
+  document.getElementById('pinModal').classList.remove('show');
+}
+
+function submitPin() {
+  const pin = document.getElementById('pinInput').value;
+  const msg = document.getElementById('pinMsg');
+  msg.textContent = '確認中...';
+
+  fetch('/redeem', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code: COUPON_CODE, pin: pin })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      closePinModal();
+      const btn = document.getElementById('receiveBtn');
+      btn.textContent = '受け取り済み ✅';
+      btn.disabled = true;
+      btn.style.background = '#9E9E9E';
+    } else {
+      msg.textContent = data.message || 'エラーが発生しました';
+    }
+  })
+  .catch(() => { msg.textContent = '通信エラーが発生しました'; });
+}
+</script>
+
+</body>
+</html>

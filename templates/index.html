@@ -271,16 +271,18 @@
     .result-name  { font-size: 28px; font-family: 'Yuji Syuku', serif; margin-bottom: 10px; }
     .result-desc  { font-size: 16px; font-family: 'M PLUS Rounded 1c', sans-serif; font-weight: 900; color: #555; line-height: 1.6; margin-bottom: 22px; white-space: pre-line; }
 
-    /* クーポンコード表示 */
-    .coupon-box {
-      background: #FFF8E1;
-      border: 2px dashed #FFB300;
-      border-radius: 14px;
+    .copy-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #FFD700, #FF8C00);
+      color: white;
+      border: none;
+      border-radius: 50px;
       padding: 14px;
-      margin-bottom: 14px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 10px;
     }
-    .coupon-label { font-size: 12px; color: #888; margin-bottom: 4px; }
-    .coupon-code  { font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #FF4500; font-family: monospace; }
     .receive-btn {
       width: 100%;
       background: linear-gradient(135deg, #FF4500, #FF8C00);
@@ -401,11 +403,8 @@
     <div class="result-emoji" id="rEmoji"></div>
     <div class="result-name"  id="rName"></div>
     <div class="result-desc"  id="rDesc"></div>
-    <div class="coupon-box" id="couponBox">
-      <div class="coupon-label">クーポンコード</div>
-      <div class="coupon-code" id="couponCode"></div>
-    </div>
-    <button class="receive-btn" id="receiveBtn" onclick="openPinModal()">商品を受け取る 🎁</button>
+    <button class="copy-btn" id="copyBtn" onclick="copyCouponUrl()">クーポンURLをコピー 📋</button>
+    <button class="receive-btn" id="receiveBtn" onclick="openPinModal()">その場で受け取る 🎁</button>
     <button class="close-btn" onclick="closeResult()">閉じる</button>
   </div>
 </div>
@@ -904,13 +903,14 @@ function spin() {
         document.getElementById('rName').style.color  = result.color;
         document.getElementById('rDesc').textContent  = result.description;
 
-        // クーポンコード表示
+        // クーポンURL設定
         currentCouponCode = result.coupon_code || '';
-        document.getElementById('couponCode').textContent = currentCouponCode;
+        const copyBtn = document.getElementById('copyBtn');
+        copyBtn.textContent = 'クーポンURLをコピー 📋';
         const receiveBtn = document.getElementById('receiveBtn');
         receiveBtn.disabled = false;
         receiveBtn.classList.remove('done');
-        receiveBtn.textContent = '商品を受け取る 🎁';
+        receiveBtn.textContent = 'その場で受け取る 🎁';
 
         document.getElementById('overlay').classList.add('show');
         btn.disabled    = false;
@@ -920,8 +920,19 @@ function spin() {
     });
 }
 
-// ── クーポン受け取り ──
+// ── クーポン ──
 let currentCouponCode = '';
+
+function copyCouponUrl() {
+  const url = location.origin + '/coupon/' + currentCouponCode;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = 'コピーしました ✅';
+    setTimeout(() => { btn.textContent = 'クーポンURLをコピー 📋'; }, 2000);
+  }).catch(() => {
+    prompt('このURLを保存してください', location.origin + '/coupon/' + currentCouponCode);
+  });
+}
 
 function openPinModal() {
   document.getElementById('pinInput').value = '';
