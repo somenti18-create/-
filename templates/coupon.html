@@ -81,6 +81,48 @@
       cursor: pointer;
     }
     .receive-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .confirm-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+    }
+    .confirm-modal.show { display: flex; }
+    .confirm-card {
+      background: white;
+      border-radius: 20px;
+      padding: 28px 24px;
+      max-width: 300px;
+      width: 90%;
+      text-align: center;
+    }
+    .confirm-title { font-size: 18px; font-weight: bold; margin-bottom: 8px; }
+    .confirm-sub { font-size: 13px; color: #888; margin-bottom: 20px; }
+    .confirm-yes {
+      width: 100%;
+      background: linear-gradient(135deg, #FF4500, #FF8C00);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+    .confirm-no {
+      width: 100%;
+      background: #eee;
+      border: none;
+      border-radius: 50px;
+      padding: 13px;
+      font-size: 15px;
+      color: #666;
+      cursor: pointer;
+    }
     .line-btn {
       display: block;
       background: #06C755;
@@ -112,14 +154,32 @@
     <a class="line-btn" href="{{ coupon['coupon_url'] }}" target="_blank">LINEで日程を連絡する 💬</a>
   {% else %}
     <div class="warning">店員の前でボタンを押してください。<br>それ以外での使用は無効となります。</div>
-    <button class="receive-btn" id="receiveBtn" onclick="receive()">受け取る 🎁</button>
+    <button class="receive-btn" id="receiveBtn" onclick="openConfirm()">受け取る 🎁</button>
   {% endif %}
+</div>
+
+<div class="confirm-modal" id="confirmModal">
+  <div class="confirm-card">
+    <div class="confirm-title">本当に受け取りますか？</div>
+    <div class="confirm-sub">一度押すと取り消せません</div>
+    <button class="confirm-yes" onclick="receive()">受け取る</button>
+    <button class="confirm-no" onclick="closeConfirm()">キャンセル</button>
+  </div>
 </div>
 
 <script>
 const COUPON_CODE = "{{ coupon['code'] }}";
 
+function openConfirm() {
+  document.getElementById('confirmModal').classList.add('show');
+}
+
+function closeConfirm() {
+  document.getElementById('confirmModal').classList.remove('show');
+}
+
 function receive() {
+  closeConfirm();
   const btn = document.getElementById('receiveBtn');
   btn.disabled = true;
   btn.textContent = '処理中...';
