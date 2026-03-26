@@ -198,7 +198,10 @@ function receive() {
       btn.style.background = '#9E9E9E';
     } else {
       btn.textContent = data.message || 'エラー';
-      btn.disabled = false;
+      btn.disabled = true;
+      btn.style.background = '#eee';
+      btn.style.color = '#999';
+      btn.style.cursor = 'default';
     }
   })
   .catch(() => {
