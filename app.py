@@ -24,10 +24,16 @@ def init_db():
             used        INTEGER DEFAULT 0,
             created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )''')
-        # 旧DBにcoupon_urlカラムがなければ追加
+        # 旧DBに不足カラムがあれば追加
         cols = [row[1] for row in conn.execute("PRAGMA table_info(coupons)")]
-        if 'coupon_url' not in cols:
-            conn.execute("ALTER TABLE coupons ADD COLUMN coupon_url TEXT NOT NULL DEFAULT ''")
+        for col, definition in [
+            ('prize_desc',  "TEXT NOT NULL DEFAULT ''"),
+            ('prize_image', "TEXT NOT NULL DEFAULT ''"),
+            ('prize_color', "TEXT NOT NULL DEFAULT '#333'"),
+            ('coupon_url',  "TEXT NOT NULL DEFAULT ''"),
+        ]:
+            if col not in cols:
+                conn.execute(f"ALTER TABLE coupons ADD COLUMN {col} {definition}")
 
 init_db()
 

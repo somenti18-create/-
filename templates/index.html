@@ -880,6 +880,19 @@ function spin() {
         spinning = false;
         document.getElementById('paymentArea').style.display = 'block';
       }, actualDur * 1000);
+    })
+    .catch(() => {
+      // サーバーエラー時にリセット
+      stopBallAcceleration();
+      stopDrum();
+      stopAlarm();
+      ball.classList.remove('spinning');
+      ball.style.animationDuration = '';
+      ball.innerHTML = '<img src="/static/dekamori.jpg" alt="デカ盛りチャレンジ">';
+      btn.disabled    = false;
+      btn.textContent = 'ガチャを回す！';
+      spinning = false;
+      alert('エラーが発生しました。もう一度お試しください。');
     });
 }
 
