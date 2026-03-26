@@ -476,6 +476,7 @@ function stopAlarm() {
 
 // ── ボール膨らみエフェクト ──
 function pulseBall() {
+  if (!spinning) return; // スピン終了後は無視
   const wrap = document.getElementById('ballWrap');
   wrap.classList.remove('pulse');
   void wrap.offsetWidth; // リフロー（アニメーション再起動）
