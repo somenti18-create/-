@@ -346,6 +346,21 @@
   </div>
 
   <button class="spin-btn" id="spinBtn" onclick="spin()">ガチャを回す！</button>
+
+  <!-- 決済リンク（準備中） -->
+  <div id="paymentArea" style="display:none; margin-top:12px;">
+    <a id="paymentLink" href="#" style="
+      display:block;
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      color: white;
+      text-decoration: none;
+      border-radius: 50px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: bold;
+      text-align: center;
+    ">💳 500円を支払う</a>
+  </div>
 </div>
 
 <div class="flash-overlay" id="flashOverlay"></div>
@@ -764,6 +779,7 @@ function spin() {
   ball.classList.add('spinning');
   btn.disabled    = true;
   btn.textContent = '回転中…';
+  document.getElementById('paymentArea').style.display = 'none';
 
   const isWin = false; // fetch前は不明
   const spinDur = 10.0; // 仮（fetch後に上書き）
@@ -862,6 +878,7 @@ function spin() {
         btn.disabled    = false;
         btn.textContent = 'もう一度回す！';
         spinning = false;
+        document.getElementById('paymentArea').style.display = 'block';
       }, actualDur * 1000);
     });
 }
