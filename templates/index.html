@@ -345,7 +345,9 @@
 //  Audio Engine
 // ══════════════════════════════════════════════
 let drumNodes = [];
+let pulseTimers = [];
 let muted = false;
+const hajimeAudio = new Audio('/static/hajime.mp3');
 let bgmStarted = false;
 let bgmPlayPromise = null;
 let _ac = null;
@@ -579,7 +581,7 @@ function playDrumRoll(duration) {
   pokyuunTimes.forEach(ratio => {
     const delay = duration * ratio;
     playPokyuun(now + delay);
-    setTimeout(() => pulseBall(), delay * 1000);
+    pulseTimers.push(setTimeout(() => pulseBall(), delay * 1000));
   });
 
   // ── クライマックス連打（最後0.5秒）──
@@ -606,6 +608,8 @@ function playDrumRoll(duration) {
 function stopDrum() {
   drumNodes.forEach(n => { try { n.disconnect(); } catch(e){} });
   drumNodes = [];
+  pulseTimers.forEach(id => clearTimeout(id));
+  pulseTimers = [];
 }
 
 function playResultSound(prizeId) {
@@ -722,8 +726,8 @@ function spin() {
   if (spinning) return;
   spinning = true;
   // 「始めいッ！」SE
-  const hajime = new Audio('/static/hajime.mp3');
-  hajime.play().catch(() => {});
+  hajimeAudio.currentTime = 0;
+  hajimeAudio.play().catch(() => {});
   startBGM();
 
   const ball = document.getElementById('ball');
