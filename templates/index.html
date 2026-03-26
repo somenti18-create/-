@@ -4,12 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>デカ盛りガチャ 🍗</title>
+  <link href="https://fonts.googleapis.com/css2?family=Reggae+One&family=Stick&family=Yuji+Syuku&family=Rampart+One&family=M+PLUS+1p:wght@900&family=Kaisei+Decol:wght@700&family=Noto+Sans+JP:wght@900&family=Zen+Kaku+Gothic+New:wght@900&family=M+PLUS+Rounded+1c:wght@900&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: 'Helvetica Neue', Arial, sans-serif;
-      background: linear-gradient(160deg, #FF6B35 0%, #FF8C00 50%, #FFD700 100%);
+      background: linear-gradient(160deg, #FFD700 0%, #FFC200 60%, #FFB300 100%);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -34,13 +35,13 @@
     /* ─── ガチャボール ─── */
     .ball-wrap {
       position: relative;
-      width: 160px;
-      height: 160px;
+      width: 220px;
+      height: 220px;
       margin: 0 auto 20px;
     }
     .ball {
-      width: 160px;
-      height: 160px;
+      width: 220px;
+      height: 220px;
       border-radius: 50%;
       background: radial-gradient(circle at 35% 35%, #fff5cc, #FF8C00 60%, #cc4400);
       display: flex;
@@ -50,6 +51,13 @@
       box-shadow: 0 6px 20px rgba(255,140,0,0.45), inset 0 -4px 8px rgba(0,0,0,0.15);
       transition: transform 0.2s;
       user-select: none;
+      overflow: hidden;
+    }
+    .ball img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
     }
     .ball.spinning {
       animation: roll 0.4s linear infinite;
@@ -62,17 +70,18 @@
     /* ─── 音量ボタン ─── */
     .sound-btn {
       position: fixed;
-      top: 16px;
-      right: 16px;
-      background: rgba(255,255,255,0.85);
+      top: 16px; right: 16px;
+      background: rgba(255,255,255,0.9);
       border: none;
-      border-radius: 50%;
-      width: 44px;
-      height: 44px;
-      font-size: 22px;
+      border-radius: 20px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-family: 'Yuji Syuku', serif;
+      color: #FF4500;
       cursor: pointer;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
       z-index: 100;
+      white-space: nowrap;
     }
 
     /* ─── 価格バッジ ─── */
@@ -82,8 +91,8 @@
       color: white;
       border-radius: 20px;
       padding: 5px 20px;
-      font-size: 14px;
-      font-weight: bold;
+      font-size: 16px;
+      font-family: 'Yuji Syuku', serif;
       margin-bottom: 18px;
     }
 
@@ -107,12 +116,100 @@
       justify-content: space-between;
       align-items: center;
       padding: 7px 0;
-      font-size: 13px;
+      font-size: 14px;
+      font-family: 'M PLUS Rounded 1c', sans-serif;
+      font-weight: 900;
       border-bottom: 1px solid #FFE0C0;
     }
     .prize-row:last-child { border-bottom: none; }
     .prize-row .name { color: #333; flex: 1; }
-    .prize-row .prob { color: #FF8C00; font-weight: bold; white-space: nowrap; margin-left: 8px; }
+    .prize-row .prob { color: #FF8C00; white-space: nowrap; margin-left: 8px; }
+
+    /* ─── ロゴ点滅（大当たり用）─── */
+    #logoImg.blink {
+      animation: logoBlink 0.3s steps(1) 6;
+    }
+    @keyframes logoBlink {
+      0%   { opacity: 1; }
+      50%  { opacity: 0; }
+      100% { opacity: 1; }
+    }
+
+    /* ─── ロゴ膨らみ（通常結果用）─── */
+    #logoImg.logoPulse {
+      animation: logoPulseAnim 0.5s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes logoPulseAnim {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.3); filter: drop-shadow(0 0 16px #FFD700); }
+      70%  { transform: scale(0.96); }
+      100% { transform: scale(1); filter: none; }
+    }
+
+    /* ─── あたり透過オーバーレイ ─── */
+    .hit-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 180;
+      opacity: 0;
+      transition: opacity 1.5s ease;
+    }
+    .hit-overlay.show { opacity: 1; }
+    .hit-overlay img {
+      width: 70%;
+      max-width: 320px;
+      border-radius: 20px;
+      opacity: 0.35;
+      filter: drop-shadow(0 0 30px #FFD700);
+    }
+
+    /* ─── ボール膨らみエフェクト ─── */
+    .ball-wrap.pulse {
+      animation: ballPulse 0.45s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes ballPulse {
+      0%   { transform: scale(1);    filter: none; }
+      30%  { transform: scale(1.45); filter: drop-shadow(0 0 28px #FFD700) drop-shadow(0 0 50px #FF8800) brightness(1.3); }
+      65%  { transform: scale(0.93); filter: drop-shadow(0 0 10px #FFD700); }
+      100% { transform: scale(1);    filter: none; }
+    }
+
+    /* ─── 画面フラッシュ（大当たり用） ─── */
+    .flash-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 190;
+      opacity: 0;
+    }
+    .flash-overlay.flash {
+      animation: screenFlash 0.6s ease-out forwards;
+    }
+    @keyframes screenFlash {
+      0%   { opacity: 0.9; background: #FFD700; }
+      100% { opacity: 0; }
+    }
+    .flash-overlay.red-flash {
+      animation: redFlash 0.4s ease-out forwards;
+    }
+    @keyframes redFlash {
+      0%   { opacity: 0.7; background: #FF0000; }
+      100% { opacity: 0; }
+    }
+
+    /* ─── 警報赤点滅（大当たり・あたり用）─── */
+    .flash-overlay.alarm {
+      animation: alarmBlink 0.25s steps(1) infinite;
+    }
+    @keyframes alarmBlink {
+      0%   { opacity: 0.55; background: #FF0000; }
+      50%  { opacity: 0; }
+      100% { opacity: 0.55; background: #FF0000; }
+    }
 
     /* ─── ボタン ─── */
     .spin-btn {
@@ -122,10 +219,10 @@
       border: none;
       border-radius: 50px;
       padding: 17px;
-      font-size: 20px;
-      font-weight: bold;
+      font-size: 22px;
+      font-family: 'Yuji Syuku', serif;
       cursor: pointer;
-      box-shadow: 0 4px 16px rgba(255,69,0,0.4);
+      box-shadow: 0 6px 24px rgba(200,0,0,0.6);
       transition: transform 0.15s, box-shadow 0.15s;
     }
     .spin-btn:hover:not(:disabled) {
@@ -162,9 +259,17 @@
       to   { transform: scale(1);   opacity: 1; }
     }
 
+    .result-img {
+      width: 100%;
+      max-height: 180px;
+      object-fit: cover;
+      border-radius: 14px;
+      margin-bottom: 14px;
+      display: none;
+    }
     .result-emoji { font-size: 80px; margin-bottom: 14px; }
-    .result-name  { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
-    .result-desc  { font-size: 15px; color: #555; line-height: 1.6; margin-bottom: 22px; white-space: pre-line; }
+    .result-name  { font-size: 28px; font-family: 'Yuji Syuku', serif; margin-bottom: 10px; }
+    .result-desc  { font-size: 16px; font-family: 'M PLUS Rounded 1c', sans-serif; font-weight: 900; color: #555; line-height: 1.6; margin-bottom: 22px; white-space: pre-line; }
 
     .coupon-btn {
       display: block;
@@ -192,23 +297,22 @@
 </head>
 <body>
 
-<button class="sound-btn" id="soundBtn" onclick="toggleSound()">🔊</button>
+<button class="sound-btn" id="soundBtn" onclick="toggleSound()">BGMをオフ</button>
 
 <div class="container">
-  <h1>🍗 デカ盛りガチャ</h1>
-  <p class="subtitle">ハズレなし！全員何かもらえる</p>
+  <img id="logoImg" src="/static/logo.jpg" alt="デカ盛り弁当はるき" style="width:180px; border-radius:12px; margin-bottom:12px;">
 
-  <div class="ball-wrap">
-    <div class="ball" id="ball">🎰</div>
+  <div class="ball-wrap" id="ballWrap">
+    <div class="ball" id="ball"><img src="/static/dekamori.jpg" alt="デカ盛りチャレンジ"></div>
   </div>
 
   <div class="price-badge">1回 500円</div>
 
   <div class="prizes">
-    <h3>景品一覧</h3>
+    <h3>景品一覧（下のどれかが必ずもらえる！）</h3>
     {% for p in prizes %}
     <div class="prize-row">
-      <span class="name">{{ p.emoji }} {{ p.name }}　{{ p.description.split('\n')[0] }}</span>
+      <span class="name">{{ p.name }}　{{ p.description.split('\n')[0] }}</span>
       <span class="prob">{{ p.weight }}%</span>
     </div>
     {% endfor %}
@@ -217,9 +321,15 @@
   <button class="spin-btn" id="spinBtn" onclick="spin()">ガチャを回す！</button>
 </div>
 
+<div class="flash-overlay" id="flashOverlay"></div>
+<div class="hit-overlay" id="hitOverlay">
+  <img src="/static/hit.jpg" alt="1キロからあげ弁当">
+</div>
+
 <!-- 結果ポップアップ -->
 <div class="overlay" id="overlay">
   <div class="result-card">
+    <img class="result-img" id="rImg" src="" alt="">
     <div class="result-emoji" id="rEmoji"></div>
     <div class="result-name"  id="rName"></div>
     <div class="result-desc"  id="rDesc"></div>
@@ -234,108 +344,262 @@
 // ══════════════════════════════════════════════
 //  Audio Engine
 // ══════════════════════════════════════════════
-let ctx = null;
-let bgmNodes = [];
 let drumNodes = [];
 let muted = false;
 let bgmStarted = false;
+let bgmPlayPromise = null;
+let _ac = null;
 
-function getCtx() {
-  if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
-  return ctx;
+const bgmAudio = new Audio('/static/bgm.mp3');
+bgmAudio.loop = true;
+bgmAudio.volume = 0.6;
+
+function getAC() {
+  if (!_ac) _ac = new (window.AudioContext || window.webkitAudioContext)();
+  return _ac;
 }
-
-// ── BGM ──────────────────────────────────────
-// 明るいループメロディ（C メジャー）
-const BGM_NOTES = [523, 659, 784, 880, 784, 659, 523, 587,
-                   659, 784, 880, 1047, 880, 784, 659, 523];
-const BGM_BPM   = 140;
-const BGM_STEP  = 60 / BGM_BPM;
 
 function startBGM() {
   if (muted || bgmStarted) return;
   bgmStarted = true;
-  const ac = getCtx();
-
-  function scheduleLoop(startTime) {
-    BGM_NOTES.forEach((freq, i) => {
-      const t = startTime + i * BGM_STEP * 0.5;
-
-      // メロディ
-      const osc  = ac.createOscillator();
-      const gain = ac.createGain();
-      osc.type = 'square';
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(0.07, t + 0.01);
-      gain.gain.linearRampToValueAtTime(0, t + BGM_STEP * 0.45);
-      osc.connect(gain); gain.connect(ac.destination);
-      osc.start(t); osc.stop(t + BGM_STEP * 0.5);
-      bgmNodes.push(osc, gain);
-
-      // ベース（1オクターブ下、偶数ステップ）
-      if (i % 2 === 0) {
-        const bass  = ac.createOscillator();
-        const bgain = ac.createGain();
-        bass.type = 'sawtooth';
-        bass.frequency.value = freq / 2;
-        bgain.gain.setValueAtTime(0, t);
-        bgain.gain.linearRampToValueAtTime(0.05, t + 0.01);
-        bgain.gain.linearRampToValueAtTime(0, t + BGM_STEP * 0.9);
-        bass.connect(bgain); bgain.connect(ac.destination);
-        bass.start(t); bass.stop(t + BGM_STEP);
-        bgmNodes.push(bass, bgain);
-      }
-    });
-
-    const loopDur = BGM_NOTES.length * BGM_STEP * 0.5;
-    if (!muted && bgmStarted) {
-      setTimeout(() => scheduleLoop(ac.currentTime + 0.05), (loopDur - 0.1) * 1000);
-    }
-  }
-
-  scheduleLoop(ac.currentTime + 0.1);
+  bgmPlayPromise = bgmAudio.play().catch(() => {});
 }
 
 function stopBGM() {
   bgmStarted = false;
-  bgmNodes.forEach(n => { try { n.disconnect(); } catch(e){} });
-  bgmNodes = [];
+  if (bgmPlayPromise) {
+    bgmPlayPromise.then(() => { bgmAudio.pause(); bgmAudio.currentTime = 0; }).catch(() => {});
+    bgmPlayPromise = null;
+  } else {
+    bgmAudio.pause();
+    bgmAudio.currentTime = 0;
+  }
 }
 
-// ── ドラムロール ─────────────────────────────
+// ── ユーティリティ ──
+function makeNoise(ac, freq, q, vol, t, len) {
+  const bufSize = ac.sampleRate * len;
+  const buf = ac.createBuffer(1, bufSize, ac.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let j = 0; j < bufSize; j++) data[j] = Math.random() * 2 - 1;
+  const src = ac.createBufferSource();
+  const flt = ac.createBiquadFilter();
+  const g   = ac.createGain();
+  src.buffer = buf;
+  flt.type = 'bandpass'; flt.frequency.value = freq; flt.Q.value = q;
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + len);
+  src.connect(flt); flt.connect(g); g.connect(ac.destination);
+  src.start(t); src.stop(t + len);
+  drumNodes.push(src, flt, g);
+}
+
+function makeOsc(ac, type, freq, vol, t, dur) {
+  const osc = ac.createOscillator(), g = ac.createGain();
+  osc.type = type; osc.frequency.value = freq;
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  osc.connect(g); g.connect(ac.destination);
+  osc.start(t); osc.stop(t + dur);
+  drumNodes.push(osc, g);
+}
+
+// BGMをフェードアウト（大当たり・あたり用）
+let bgmFadeTimer = null;
+function fadeBGM(duration) {
+  if (muted || !bgmStarted) return;
+  const steps = 30;
+  let step = 0;
+  const startVol = bgmAudio.volume;
+  bgmFadeTimer = setInterval(() => {
+    step++;
+    bgmAudio.volume = Math.max(0, startVol * (1 - step / steps));
+    if (step >= steps) {
+      clearInterval(bgmFadeTimer);
+      bgmAudio.pause();
+      bgmStarted = false;
+      bgmAudio.volume = 0.6; // 次回用にリセット
+    }
+  }, (duration * 1000) / steps);
+}
+
+// ── ボール回転速度を加速 ──
+let rotTimer = null;
+function startBallAcceleration(totalDuration) {
+  let elapsed = 0;
+  const TICK = 80;
+  rotTimer = setInterval(() => {
+    elapsed += TICK;
+    const p = elapsed / (totalDuration * 1000);
+    // ゆっくり→爆速（指数的加速）
+    const dur = Math.max(0.07, 1.6 * Math.pow(1 - Math.min(p, 0.98), 2.2));
+    const ball = document.getElementById('ball');
+    if (ball) ball.style.animationDuration = dur + 's';
+  }, TICK);
+}
+function stopBallAcceleration() {
+  clearInterval(rotTimer);
+  rotTimer = null;
+}
+
+// ── 警報サイレン音 ──
+let alarmTimer = null;
+let alarmNodes = [];
+function startAlarm() {
+  if (muted) return;
+  const ac = getAC();
+  let phase = 0;
+  alarmTimer = setInterval(() => {
+    // ウ───ウ─── 交互ピッチ
+    const freq = phase % 2 === 0 ? 1100 : 750;
+    const osc = ac.createOscillator(), g = ac.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(freq, ac.currentTime);
+    osc.frequency.linearRampToValueAtTime(phase % 2 === 0 ? 900 : 950, ac.currentTime + 0.22);
+    g.gain.setValueAtTime(0.55, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.24);
+    osc.connect(g); g.connect(ac.destination);
+    osc.start(); osc.stop(ac.currentTime + 0.25);
+    alarmNodes.push(osc, g);
+    phase++;
+  }, 240);
+}
+function stopAlarm() {
+  clearInterval(alarmTimer);
+  alarmTimer = null;
+  alarmNodes.forEach(n => { try { n.disconnect(); } catch(e){} });
+  alarmNodes = [];
+  // 赤点滅も止める
+  const el = document.getElementById('flashOverlay');
+  el.className = 'flash-overlay';
+}
+
+// ── ボール膨らみエフェクト ──
+function pulseBall() {
+  const wrap = document.getElementById('ballWrap');
+  wrap.classList.remove('pulse');
+  void wrap.offsetWidth; // リフロー（アニメーション再起動）
+  wrap.classList.add('pulse');
+  wrap.addEventListener('animationend', () => wrap.classList.remove('pulse'), { once: true });
+}
+
+function flashScreen(type = 'flash') {
+  const el = document.getElementById('flashOverlay');
+  el.className = 'flash-overlay';
+  void el.offsetWidth;
+  el.classList.add(type);
+  el.addEventListener('animationend', () => el.className = 'flash-overlay', { once: true });
+}
+
+// ── ポキューン！激熱通知音（パチンコ風）──
+function playPokyuun(t) {
+  if (muted) return;
+  const ac = getAC();
+
+  // ① バネ上昇音「キュイーン」（急速ピッチアップ）
+  const osc1 = ac.createOscillator(), g1 = ac.createGain();
+  osc1.type = 'sawtooth';
+  osc1.frequency.setValueAtTime(180, t);
+  osc1.frequency.exponentialRampToValueAtTime(3200, t + 0.18);
+  osc1.frequency.exponentialRampToValueAtTime(1600, t + 0.32);
+  g1.gain.setValueAtTime(0, t);
+  g1.gain.linearRampToValueAtTime(0.55, t + 0.04);
+  g1.gain.linearRampToValueAtTime(0.4, t + 0.18);
+  g1.gain.exponentialRampToValueAtTime(0.001, t + 0.38);
+  osc1.connect(g1); g1.connect(ac.destination);
+  osc1.start(t); osc1.stop(t + 0.4);
+
+  // ② ポン！打撃音
+  makeNoise(ac, 400, 3.0, 0.8, t + 0.02, 0.07);
+  makeNoise(ac, 120, 2.0, 1.0, t + 0.02, 0.08);
+
+  // ③ ビブラート余韻「ポワーン」
+  const osc2 = ac.createOscillator(), g2 = ac.createGain();
+  const lfo  = ac.createOscillator(), lg  = ac.createGain();
+  osc2.type = 'sine';
+  osc2.frequency.setValueAtTime(1600, t + 0.18);
+  osc2.frequency.exponentialRampToValueAtTime(900, t + 0.55);
+  lfo.frequency.value = 18;
+  lg.gain.setValueAtTime(60, t + 0.18);
+  lg.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+  lfo.connect(lg); lg.connect(osc2.frequency);
+  g2.gain.setValueAtTime(0.4, t + 0.18);
+  g2.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+  osc2.connect(g2); g2.connect(ac.destination);
+  lfo.start(t + 0.18); lfo.stop(t + 0.65);
+  osc2.start(t + 0.18); osc2.stop(t + 0.65);
+
+  // ④ 高音チャリン
+  [2093, 2637, 3136].forEach((freq, i) => {
+    makeOsc(ac, 'sine', freq, 0.3, t + 0.22 + i * 0.07, 0.18);
+  });
+}
+
 function playDrumRoll(duration) {
   if (muted) return;
-  const ac = getCtx();
-  const count = Math.floor(duration * 18);
+  const ac = getAC();
+  const now = ac.currentTime;
 
-  for (let i = 0; i < count; i++) {
-    const progress = i / count;
-    const t = ac.currentTime + (i / count) * duration;
+  let t = now;
+  let interval = 0.16;
+  while (t < now + duration) {
+    const progress = (t - now) / duration;
+    interval = Math.max(0.032, 0.16 - progress * 0.13);
 
-    // スネア（ホワイトノイズ）
-    const bufSize = ac.sampleRate * 0.04;
-    const buf  = ac.createBuffer(1, bufSize, ac.sampleRate);
-    const data = buf.getChannelData(0);
-    for (let j = 0; j < bufSize; j++) data[j] = (Math.random() * 2 - 1);
+    const vol = 0.6 + progress * 0.8;
 
-    const src    = ac.createBufferSource();
-    const filter = ac.createBiquadFilter();
-    const gain   = ac.createGain();
+    // キック（重い低音）
+    makeNoise(ac, 80,  2.5, vol * 0.9, t, 0.07);
+    makeNoise(ac, 160, 1.5, vol * 0.5, t, 0.05);
+    // スネア
+    makeNoise(ac, 2500, 1.0, vol * 0.8, t + interval * 0.5, 0.055);
+    makeNoise(ac, 5000, 0.6, vol * 0.6, t + interval * 0.5, 0.04);
+    // ハイハット
+    makeNoise(ac, 10000, 2.0, vol * 0.35, t, 0.02);
+    makeNoise(ac, 10000, 2.0, vol * 0.25, t + interval * 0.25, 0.015);
 
-    src.buffer = buf;
-    filter.type = 'bandpass';
-    filter.frequency.value = 2000 + progress * 2000;
-    filter.Q.value = 0.8;
+    // 上昇ピッチ（後半から）
+    if (progress > 0.35) {
+      const pitch = 200 + progress * 1200;
+      makeOsc(ac, 'sawtooth', pitch, 0.18 * progress, t, interval * 0.45);
+      makeOsc(ac, 'square', pitch * 1.5, 0.1 * progress, t, interval * 0.3);
+    }
 
-    const vol = 0.08 + progress * 0.25;
-    gain.gain.setValueAtTime(vol, t);
-    gain.gain.linearRampToValueAtTime(0, t + 0.035);
+    // コイン音（中盤から）
+    if (progress > 0.6 && Math.random() > 0.4) {
+      makeOsc(ac, 'sine', 1200 + Math.random() * 800, 0.3 * progress, t, 0.04);
+    }
 
-    src.connect(filter); filter.connect(gain); gain.connect(ac.destination);
-    src.start(t); src.stop(t + 0.04);
-    drumNodes.push(src, filter, gain);
+    t += interval;
   }
+
+  // ── ポキューン！を盛り上がりポイントで鳴らす（視覚と連動）──
+  const pokyuunTimes = [0.25, 0.48, 0.68, 0.84];
+  pokyuunTimes.forEach(ratio => {
+    const delay = duration * ratio;
+    playPokyuun(now + delay);
+    setTimeout(() => pulseBall(), delay * 1000);
+  });
+
+  // ── クライマックス連打（最後0.5秒）──
+  for (let i = 0; i < 14; i++) {
+    const ct = now + duration - 0.5 + i * 0.036;
+    makeNoise(ac, 5000 + i*200, 0.4, 1.0, ct, 0.03);
+    makeNoise(ac, 80,  2.0, 1.2, ct, 0.03);
+    makeOsc(ac, 'square', 400 + i * 80, 0.25, ct, 0.03);
+  }
+
+  // ── ピッチスウィープ（最後の盛り上がり）──
+  const sweep = ac.createOscillator(), sg = ac.createGain();
+  sweep.type = 'sawtooth';
+  sweep.frequency.setValueAtTime(200, now + duration - 0.8);
+  sweep.frequency.linearRampToValueAtTime(2400, now + duration);
+  sg.gain.setValueAtTime(0, now + duration - 0.8);
+  sg.gain.linearRampToValueAtTime(0.4, now + duration - 0.1);
+  sg.gain.linearRampToValueAtTime(0, now + duration);
+  sweep.connect(sg); sg.connect(ac.destination);
+  sweep.start(now + duration - 0.8); sweep.stop(now + duration + 0.05);
+  drumNodes.push(sweep, sg);
 }
 
 function stopDrum() {
@@ -343,82 +607,110 @@ function stopDrum() {
   drumNodes = [];
 }
 
-// ── 結果音 ───────────────────────────────────
 function playResultSound(prizeId) {
   if (muted) return;
-  const ac = getCtx();
+  const ac = getAC();
   const t  = ac.currentTime;
 
   if (prizeId === 'jackpot') {
-    // コメディ：上昇→下降「わ〜お」
-    const notes = [400, 500, 650, 800, 650, 500, 350, 280];
-    notes.forEach((freq, i) => {
-      const osc = ac.createOscillator();
-      const g   = ac.createGain();
+    // ── 大当たり：緊急サイレン → 超爆発 ──
+    // 画面フラッシュ連打
+    setTimeout(() => flashScreen('red-flash'),  0);
+    setTimeout(() => flashScreen('flash'),      200);
+    setTimeout(() => flashScreen('red-flash'),  400);
+    setTimeout(() => flashScreen('flash'),      700);
+
+    // 緊急アラーム（サイレン風）
+    for (let i = 0; i < 5; i++) {
+      const st = t + i * 0.1;
+      const osc = ac.createOscillator(), g = ac.createGain();
       osc.type = 'sawtooth';
-      osc.frequency.value = freq;
-      g.gain.setValueAtTime(0.18, t + i * 0.09);
-      g.gain.linearRampToValueAtTime(0, t + i * 0.09 + 0.08);
+      osc.frequency.setValueAtTime(800, st);
+      osc.frequency.linearRampToValueAtTime(1400, st + 0.05);
+      g.gain.setValueAtTime(0.5, st);
+      g.gain.exponentialRampToValueAtTime(0.001, st + 0.09);
       osc.connect(g); g.connect(ac.destination);
-      osc.start(t + i * 0.09); osc.stop(t + i * 0.09 + 0.1);
+      osc.start(st); osc.stop(st + 0.1);
+      drumNodes.push(osc, g);
+    }
+
+    // 大爆発音（多層）
+    [60, 120, 300, 800, 3000, 8000].forEach((f,i) => makeNoise(ac, f, 1.5-i*0.15, 1.3-i*0.15, t+0.52, 0.5-i*0.04));
+
+    // 高速上昇アルペジオ×2オクターブ
+    [131,165,196,262,330,392,523,659,784,1047,1319,1568,2093,2637].forEach((freq,i) => {
+      makeOsc(ac, 'square',   freq,   0.45, t + 0.5 + i*0.04, 0.12);
+      makeOsc(ac, 'sawtooth', freq*2, 0.22, t + 0.5 + i*0.04, 0.10);
     });
+
+    // 大和音チャーン（ド・ミ・ソ・ド 2オクターブ）
+    [130,165,196,262,330,392,523,659,784,1047].forEach(freq => {
+      makeOsc(ac, 'sawtooth', freq, 0.35, t + 1.1, 3.0);
+    });
+
+    // コイン連打
+    for (let i = 0; i < 24; i++) {
+      makeOsc(ac, 'sine', 700 + Math.random()*1400, 0.55, t + 1.0 + i*0.07, 0.07);
+      makeNoise(ac, 6000, 0.5, 0.65, t + 1.0 + i*0.07, 0.03);
+    }
+
+    // ドラム連打
+    for (let i = 0; i < 10; i++) {
+      makeNoise(ac, 80, 2.0, 1.2, t + 1.05 + i*0.055, 0.05);
+      makeNoise(ac, 4000, 0.8, 0.9, t + 1.05 + i*0.055, 0.04);
+    }
 
   } else if (prizeId === 'hit') {
-    // ファンファーレ
-    const fanfare = [523, 659, 784, 1047, 784, 1047];
-    fanfare.forEach((freq, i) => {
-      const osc = ac.createOscillator();
-      const g   = ac.createGain();
-      osc.type = 'square';
-      osc.frequency.value = freq;
-      g.gain.setValueAtTime(0.15, t + i * 0.12);
-      g.gain.linearRampToValueAtTime(0, t + i * 0.12 + 0.1);
-      osc.connect(g); g.connect(ac.destination);
-      osc.start(t + i * 0.12); osc.stop(t + i * 0.12 + 0.12);
+    // ── あたり：緊急感 → 勝利ファンファーレ ──
+    setTimeout(() => flashScreen('flash'),      0);
+    setTimeout(() => flashScreen('flash'),      300);
+
+    // 緊急ビープ
+    for (let i = 0; i < 3; i++) {
+      makeOsc(ac, 'square', 1047, 0.4, t + i*0.12, 0.09);
+    }
+
+    makeNoise(ac, 200, 1.5, 0.9, t + 0.38, 0.15);
+    makeNoise(ac, 5000, 0.5, 0.7, t + 0.38, 0.1);
+
+    [392,494,587,784,988,784,988,1175].forEach((freq,i) => {
+      makeOsc(ac, 'square',   freq,   0.38, t + 0.36 + i*0.09, 0.15);
+      makeOsc(ac, 'sawtooth', freq*2, 0.18, t + 0.36 + i*0.09, 0.12);
     });
 
+    [587,740,880,1175].forEach(freq => {
+      makeOsc(ac, 'sawtooth', freq, 0.32, t + 1.1, 2.0);
+    });
+
+    for (let i = 0; i < 12; i++) {
+      makeOsc(ac, 'sine', 900 + Math.random()*600, 0.45, t + 1.05 + i*0.08, 0.06);
+    }
+
   } else if (prizeId === 'participation') {
-    // 明るいチャイム
-    [1047, 1319, 1568].forEach((freq, i) => {
-      const osc = ac.createOscillator();
-      const g   = ac.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = freq;
-      g.gain.setValueAtTime(0.2, t + i * 0.18);
-      g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.18 + 0.5);
-      osc.connect(g); g.connect(ac.destination);
-      osc.start(t + i * 0.18); osc.stop(t + i * 0.18 + 0.5);
+    // ── 参加賞：3連アップチャイム ──
+    [[784,988,1175],[988,1175,1568],[1175,1568,1976]].forEach(([a,b,c],j) => {
+      [a,b,c].forEach((freq,i) => {
+        makeOsc(ac, 'sine',     freq,   0.45, t + j*0.38 + i*0.14, 0.55);
+        makeOsc(ac, 'triangle', freq*2, 0.15, t + j*0.38 + i*0.14, 0.3);
+      });
     });
 
   } else {
-    // ハズレ：下降音
-    [440, 370, 311, 262].forEach((freq, i) => {
-      const osc = ac.createOscillator();
-      const g   = ac.createGain();
-      osc.type = 'triangle';
-      osc.frequency.value = freq;
-      g.gain.setValueAtTime(0.12, t + i * 0.1);
-      g.gain.linearRampToValueAtTime(0, t + i * 0.1 + 0.09);
-      osc.connect(g); g.connect(ac.destination);
-      osc.start(t + i * 0.1); osc.stop(t + i * 0.1 + 0.1);
+    // ── ハズレ：ズドーン下降 ──
+    makeNoise(ac, 300, 1.5, 0.7, t, 0.12);
+    [494,440,392,349,294,247,220].forEach((freq,i) => {
+      makeOsc(ac, 'sawtooth', freq, 0.3, t + i*0.1, 0.15);
     });
+    makeOsc(ac, 'sine', 100, 0.4, t + 0.5, 0.6);
   }
 }
 
 function toggleSound() {
   muted = !muted;
-  document.getElementById('soundBtn').textContent = muted ? '🔇' : '🔊';
-  if (muted) {
-    stopBGM();
-  } else if (!spinning) {
-    startBGM();
-  }
+  document.getElementById('soundBtn').textContent = muted ? 'BGMをオン' : 'BGMをオフ';
+  if (muted) stopBGM();
+  else startBGM();
 }
-
-// ── 初回タップでBGM開始（ブラウザポリシー対応）────
-document.addEventListener('click', () => {
-  if (!bgmStarted && !muted) startBGM();
-}, { once: true });
 
 // ══════════════════════════════════════════════
 //  Gacha Logic
@@ -428,27 +720,93 @@ let spinning = false;
 function spin() {
   if (spinning) return;
   spinning = true;
-
-  stopBGM();
+  startBGM();
 
   const ball = document.getElementById('ball');
   const btn  = document.getElementById('spinBtn');
+  ball.style.animationDuration = '1.6s'; // 最初はゆっくり
   ball.classList.add('spinning');
   btn.disabled    = true;
   btn.textContent = '回転中…';
 
-  const spinDur = 1.8;
-  playDrumRoll(spinDur);
+  const isWin = false; // fetch前は不明
+  const spinDur = 10.0; // 仮（fetch後に上書き）
+  startBallAcceleration(20.0); // 最大20秒想定で加速
+  playDrumRoll(20.0);
+
+  // BGMは10秒で必ず止める
+  setTimeout(() => fadeBGM(1.5), 10000);
 
   fetch('/spin', { method: 'POST' })
     .then(r => r.json())
     .then(result => {
+      // 大当たり・あたりは20秒、それ以外は10秒
+      const actualDur = (result.id === 'jackpot' || result.id === 'hit') ? 20.0 : 10.0;
+
+      // 大当たり：ロゴを即座に3回点滅
+      if (result.id === 'jackpot') {
+        const logo = document.getElementById('logoImg');
+        logo.classList.remove('blink');
+        void logo.offsetWidth;
+        logo.classList.add('blink');
+        logo.addEventListener('animationend', () => logo.classList.remove('blink'), { once: true });
+      }
+
+      // あたり：スピン中盤から透過画像を表示 → 2秒後にフェードアウト
+      if (result.id === 'hit') {
+        setTimeout(() => {
+          document.getElementById('hitOverlay').classList.add('show');
+          setTimeout(() => document.getElementById('hitOverlay').classList.remove('show'), 2000);
+        }, 8000);
+      }
+
+      // 大当たり・あたり：警報は残り2秒前から
+      if (result.id === 'jackpot' || result.id === 'hit') {
+        setTimeout(() => {
+          startAlarm();
+          document.getElementById('flashOverlay').classList.add('alarm');
+        }, (actualDur - 2.0) * 1000);
+      }
+
       setTimeout(() => {
+        stopBallAcceleration();
+        stopAlarm();
         stopDrum();
         ball.classList.remove('spinning');
-        ball.textContent = result.emoji;
+        ball.style.animationDuration = '';
+
+        if (result.image) {
+          ball.innerHTML = `<img src="${result.image}" alt="${result.name}">`;
+        } else {
+          ball.textContent = result.emoji;
+        }
+
+        // あたり透過オーバーレイを非表示
+        document.getElementById('hitOverlay').classList.remove('show');
 
         playResultSound(result.id);
+        if (result.id === 'jackpot' || result.id === 'hit') {
+          pulseBall();
+          setTimeout(() => pulseBall(), 500);
+          setTimeout(() => pulseBall(), 900);
+        } else {
+          // 通常結果：ロゴを膨らませる
+          const logo = document.getElementById('logoImg');
+          logo.classList.remove('logoPulse');
+          void logo.offsetWidth;
+          logo.classList.add('logoPulse');
+          logo.addEventListener('animationend', () => logo.classList.remove('logoPulse'), { once: true });
+        }
+
+        const rImg = document.getElementById('rImg');
+        if (result.image) {
+          rImg.src = result.image;
+          rImg.style.display = 'block';
+          document.getElementById('rEmoji').style.display = 'none';
+        } else {
+          rImg.style.display = 'none';
+          document.getElementById('rEmoji').style.display = 'block';
+        }
 
         document.getElementById('rEmoji').textContent = result.emoji;
         document.getElementById('rName').textContent  = result.name;
@@ -457,7 +815,7 @@ function spin() {
 
         const couponBtn = document.getElementById('rCoupon');
         if (result.coupon_url) {
-          couponBtn.href          = result.coupon_url;
+          couponBtn.href = result.coupon_url;
           couponBtn.style.display = 'block';
         } else {
           couponBtn.style.display = 'none';
@@ -467,13 +825,15 @@ function spin() {
         btn.disabled    = false;
         btn.textContent = 'もう一度回す！';
         spinning = false;
-      }, spinDur * 1000);
+      }, actualDur * 1000);
     });
 }
 
 function closeResult() {
+  stopAlarm();
   document.getElementById('overlay').classList.remove('show');
-  if (!muted) startBGM();
+  document.getElementById('ball').innerHTML = '<img src="/static/dekamori.jpg" alt="デカ盛りチャレンジ">';
+  document.getElementById('rEmoji').style.display = 'block';
 }
 </script>
 
