@@ -309,60 +309,6 @@
     }
     .close-btn:hover { background: #ddd; }
 
-    /* PINモーダル */
-    .pin-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.75);
-      z-index: 300;
-      align-items: center;
-      justify-content: center;
-    }
-    .pin-modal.show { display: flex; }
-    .pin-card {
-      background: white;
-      border-radius: 20px;
-      padding: 28px 24px;
-      max-width: 300px;
-      width: 100%;
-      text-align: center;
-    }
-    .pin-title { font-size: 16px; font-weight: bold; margin-bottom: 16px; color: #333; }
-    .pin-input {
-      width: 100%;
-      font-size: 28px;
-      text-align: center;
-      letter-spacing: 8px;
-      border: 2px solid #ddd;
-      border-radius: 10px;
-      padding: 10px;
-      margin-bottom: 14px;
-      box-sizing: border-box;
-    }
-    .pin-submit {
-      width: 100%;
-      background: #FF4500;
-      color: white;
-      border: none;
-      border-radius: 50px;
-      padding: 13px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-bottom: 8px;
-    }
-    .pin-cancel {
-      width: 100%;
-      background: #eee;
-      border: none;
-      border-radius: 50px;
-      padding: 12px;
-      font-size: 14px;
-      color: #666;
-      cursor: pointer;
-    }
-    .pin-msg { font-size: 14px; color: #FF4500; margin-top: 8px; min-height: 20px; }
   </style>
 </head>
 <body>
@@ -404,21 +350,11 @@
     <div class="result-name"  id="rName"></div>
     <div class="result-desc"  id="rDesc"></div>
     <button class="copy-btn" id="copyBtn" onclick="copyCouponUrl()">クーポンURLをコピー 📋</button>
-    <button class="receive-btn" id="receiveBtn" onclick="openPinModal()">その場で受け取る 🎁</button>
+    <button class="receive-btn" id="receiveBtn" onclick="receiveInStore()">その場で受け取る 🎁</button>
     <button class="close-btn" onclick="closeResult()">閉じる</button>
   </div>
 </div>
 
-<!-- PINモーダル -->
-<div class="pin-modal" id="pinModal">
-  <div class="pin-card">
-    <div class="pin-title">スタッフがPINを入力してください</div>
-    <input class="pin-input" id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="●●●●">
-    <button class="pin-submit" onclick="submitPin()">確定</button>
-    <button class="pin-cancel" onclick="closePinModal()">キャンセル</button>
-    <div class="pin-msg" id="pinMsg"></div>
-  </div>
-</div>
 
 <script>
 // ══════════════════════════════════════════════
@@ -934,40 +870,30 @@ function copyCouponUrl() {
   });
 }
 
-function openPinModal() {
-  document.getElementById('pinInput').value = '';
-  document.getElementById('pinMsg').textContent = '';
-  document.getElementById('pinModal').classList.add('show');
-  setTimeout(() => document.getElementById('pinInput').focus(), 100);
-}
-
-function closePinModal() {
-  document.getElementById('pinModal').classList.remove('show');
-}
-
-function submitPin() {
-  const pin  = document.getElementById('pinInput').value;
-  const msg  = document.getElementById('pinMsg');
-  msg.textContent = '確認中...';
+function receiveInStore() {
+  const btn = document.getElementById('receiveBtn');
+  btn.disabled = true;
+  btn.textContent = '処理中...';
 
   fetch('/redeem', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ code: currentCouponCode, pin: pin })
+    body: JSON.stringify({ code: currentCouponCode })
   })
   .then(r => r.json())
   .then(data => {
     if (data.success) {
-      closePinModal();
-      const btn = document.getElementById('receiveBtn');
       btn.textContent = '受け取り済み ✅';
       btn.classList.add('done');
-      btn.disabled = true;
     } else {
-      msg.textContent = data.message || 'エラーが発生しました';
+      btn.textContent = data.message || 'エラー';
+      btn.disabled = false;
     }
   })
-  .catch(() => { msg.textContent = '通信エラーが発生しました'; });
+  .catch(() => {
+    btn.textContent = '通信エラー';
+    btn.disabled = false;
+  });
 }
 
 function closeResult() {

@@ -47,11 +47,20 @@
       font-weight: 900;
       color: #555;
       line-height: 1.7;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
       white-space: pre-line;
     }
-
-    /* 使用済み */
+    .warning {
+      background: #FFF3E0;
+      border-left: 4px solid #FF8C00;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 13px;
+      color: #E65100;
+      text-align: left;
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
     .used-badge {
       background: #eee;
       color: #999;
@@ -59,10 +68,7 @@
       padding: 16px;
       font-size: 18px;
       font-weight: bold;
-      margin-bottom: 12px;
     }
-
-    /* 受け取りボタン */
     .receive-btn {
       width: 100%;
       background: linear-gradient(135deg, #FF4500, #FF8C00);
@@ -73,63 +79,8 @@
       font-size: 18px;
       font-weight: bold;
       cursor: pointer;
-      margin-bottom: 12px;
     }
     .receive-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    /* PINモーダル */
-    .pin-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.75);
-      z-index: 300;
-      align-items: center;
-      justify-content: center;
-    }
-    .pin-modal.show { display: flex; }
-    .pin-card {
-      background: white;
-      border-radius: 20px;
-      padding: 28px 24px;
-      max-width: 300px;
-      width: 90%;
-      text-align: center;
-    }
-    .pin-title { font-size: 16px; font-weight: bold; margin-bottom: 16px; color: #333; }
-    .pin-input {
-      width: 100%;
-      font-size: 28px;
-      text-align: center;
-      letter-spacing: 8px;
-      border: 2px solid #ddd;
-      border-radius: 10px;
-      padding: 10px;
-      margin-bottom: 14px;
-    }
-    .pin-submit {
-      width: 100%;
-      background: #FF4500;
-      color: white;
-      border: none;
-      border-radius: 50px;
-      padding: 13px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-bottom: 8px;
-    }
-    .pin-cancel {
-      width: 100%;
-      background: #eee;
-      border: none;
-      border-radius: 50px;
-      padding: 12px;
-      font-size: 14px;
-      color: #666;
-      cursor: pointer;
-    }
-    .pin-msg { font-size: 14px; color: #FF4500; margin-top: 10px; min-height: 20px; }
     .line-btn {
       display: block;
       background: #06C755;
@@ -139,9 +90,7 @@
       padding: 16px;
       font-size: 18px;
       font-weight: bold;
-      margin-bottom: 12px;
     }
-    .note { font-size: 12px; color: #aaa; margin-top: 8px; }
   </style>
 </head>
 <body>
@@ -159,62 +108,41 @@
   {% if coupon['used'] %}
     <div class="used-badge">このクーポンは使用済みです</div>
   {% elif coupon['coupon_url'] %}
+    <div class="warning">店員の前でボタンを押してください。<br>それ以外での使用は無効となります。</div>
     <a class="line-btn" href="{{ coupon['coupon_url'] }}" target="_blank">LINEで日程を連絡する 💬</a>
-    <div class="note">上のボタンからLINEでご連絡ください</div>
   {% else %}
-    <button class="receive-btn" id="receiveBtn" onclick="openPinModal()">お店で受け取る 🎁</button>
-    <div class="note">お店のスタッフにこの画面を見せてください</div>
+    <div class="warning">店員の前でボタンを押してください。<br>それ以外での使用は無効となります。</div>
+    <button class="receive-btn" id="receiveBtn" onclick="receive()">受け取る 🎁</button>
   {% endif %}
-</div>
-
-<!-- PINモーダル -->
-<div class="pin-modal" id="pinModal">
-  <div class="pin-card">
-    <div class="pin-title">スタッフがPINを入力してください</div>
-    <input class="pin-input" id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="●●●●">
-    <button class="pin-submit" onclick="submitPin()">確定</button>
-    <button class="pin-cancel" onclick="closePinModal()">キャンセル</button>
-    <div class="pin-msg" id="pinMsg"></div>
-  </div>
 </div>
 
 <script>
 const COUPON_CODE = "{{ coupon['code'] }}";
 
-function openPinModal() {
-  document.getElementById('pinInput').value = '';
-  document.getElementById('pinMsg').textContent = '';
-  document.getElementById('pinModal').classList.add('show');
-  setTimeout(() => document.getElementById('pinInput').focus(), 100);
-}
-
-function closePinModal() {
-  document.getElementById('pinModal').classList.remove('show');
-}
-
-function submitPin() {
-  const pin = document.getElementById('pinInput').value;
-  const msg = document.getElementById('pinMsg');
-  msg.textContent = '確認中...';
+function receive() {
+  const btn = document.getElementById('receiveBtn');
+  btn.disabled = true;
+  btn.textContent = '処理中...';
 
   fetch('/redeem', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ code: COUPON_CODE, pin: pin })
+    body: JSON.stringify({ code: COUPON_CODE })
   })
   .then(r => r.json())
   .then(data => {
     if (data.success) {
-      closePinModal();
-      const btn = document.getElementById('receiveBtn');
       btn.textContent = '受け取り済み ✅';
-      btn.disabled = true;
       btn.style.background = '#9E9E9E';
     } else {
-      msg.textContent = data.message || 'エラーが発生しました';
+      btn.textContent = data.message || 'エラー';
+      btn.disabled = false;
     }
   })
-  .catch(() => { msg.textContent = '通信エラーが発生しました'; });
+  .catch(() => {
+    btn.textContent = '通信エラー。再度お試しください';
+    btn.disabled = false;
+  });
 }
 </script>
 

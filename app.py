@@ -64,10 +64,6 @@ def coupon_page(code):
 def redeem():
     data = request.get_json()
     code = (data.get("code") or "").upper()
-    pin  = data.get("pin") or ""
-
-    if pin != STAFF_PIN:
-        return jsonify({"success": False, "message": "PINが違います"}), 403
 
     with get_db() as conn:
         coupon = conn.execute(
