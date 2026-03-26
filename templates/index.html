@@ -869,10 +869,6 @@ function spin() {
         currentCouponCode = result.coupon_code || '';
         const copyBtn = document.getElementById('copyBtn');
         copyBtn.textContent = 'クーポンURLをコピー 📋';
-        const receiveBtn = document.getElementById('receiveBtn');
-        receiveBtn.disabled = false;
-        receiveBtn.classList.remove('done');
-        receiveBtn.textContent = 'その場で受け取る 🎁';
 
         document.getElementById('overlay').classList.add('show');
         btn.disabled    = false;
