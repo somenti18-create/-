@@ -282,6 +282,18 @@
       margin-bottom: 16px;
     }
 
+    .line-result-btn {
+      display: block;
+      background: #06C755;
+      color: white;
+      text-decoration: none;
+      border-radius: 50px;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 10px;
+    }
     .copy-btn {
       width: 100%;
       background: linear-gradient(135deg, #FFD700, #FF8C00);
@@ -375,8 +387,9 @@
     <div class="result-emoji" id="rEmoji"></div>
     <div class="result-name"  id="rName"></div>
     <div class="result-desc"  id="rDesc"></div>
-    <div class="coupon-notice">⚠️ 店舗での受け取りにはこのURLが必要です。必ず保管してください。</div>
+    <div class="coupon-notice" id="couponNotice">⚠️ 店舗での受け取りにはこのURLが必要です。必ず保管してください。</div>
     <button class="copy-btn" id="copyBtn" onclick="copyCouponUrl()">クーポンURLをコピー 📋</button>
+    <a class="line-result-btn" id="lineBtn" href="https://lin.ee/QoQbkNz" target="_blank" style="display:none">LINEで日程を連絡する 💬</a>
   </div>
 </div>
 
@@ -867,8 +880,19 @@ function spin() {
 
         // クーポンURL設定
         currentCouponCode = result.coupon_code || '';
-        const copyBtn = document.getElementById('copyBtn');
-        copyBtn.textContent = 'クーポンURLをコピー 📋';
+        const copyBtn  = document.getElementById('copyBtn');
+        const lineBtn  = document.getElementById('lineBtn');
+        const notice   = document.getElementById('couponNotice');
+        if (result.id === 'jackpot') {
+          copyBtn.style.display  = 'none';
+          notice.style.display   = 'none';
+          lineBtn.style.display  = 'block';
+        } else {
+          copyBtn.style.display  = 'block';
+          notice.style.display   = 'block';
+          lineBtn.style.display  = 'none';
+          copyBtn.textContent    = 'クーポンURLをコピー 📋';
+        }
 
         document.getElementById('overlay').classList.add('show');
         btn.disabled    = false;
