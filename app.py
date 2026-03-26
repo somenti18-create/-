@@ -81,9 +81,12 @@ def redeem():
         ).fetchone()
         if not coupon:
             return jsonify({"success": False, "message": "無効なコードです"}), 404
-        if coupon["used"]:
-            return jsonify({"success": False, "message": "このクーポンはすでに使用済みです"}), 409
-        conn.execute("UPDATE coupons SET used = 1 WHERE code = ?", (code,))
+        # アトミックな更新でused=0の場合のみ成功（同時アクセス対策）
+        cur = conn.execute(
+            "UPDATE coupons SET used = 1 WHERE code = ? AND used = 0", (code,)
+        )
+        if cur.rowcount == 0:
+            return jsonify({"success": False, "message": "⚠️ 同じリンクで2回以上の使用はできません"}), 409
 
     return jsonify({"success": True, "message": "受け取り完了！"})
 
