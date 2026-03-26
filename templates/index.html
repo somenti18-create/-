@@ -511,6 +511,7 @@ function playPokyuun(t) {
   g1.gain.exponentialRampToValueAtTime(0.001, t + 0.38);
   osc1.connect(g1); g1.connect(ac.destination);
   osc1.start(t); osc1.stop(t + 0.4);
+  drumNodes.push(osc1, g1);
 
   // ② ポン！打撃音
   makeNoise(ac, 400, 3.0, 0.8, t + 0.02, 0.07);
@@ -531,6 +532,7 @@ function playPokyuun(t) {
   osc2.connect(g2); g2.connect(ac.destination);
   lfo.start(t + 0.18); lfo.stop(t + 0.65);
   osc2.start(t + 0.18); osc2.stop(t + 0.65);
+  drumNodes.push(osc2, g2, lfo, lg);
 
   // ④ 高音チャリン
   [2093, 2637, 3136].forEach((freq, i) => {
