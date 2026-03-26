@@ -24,6 +24,10 @@ def init_db():
             used        INTEGER DEFAULT 0,
             created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )''')
+        # 旧DBにcoupon_urlカラムがなければ追加
+        cols = [row[1] for row in conn.execute("PRAGMA table_info(coupons)")]
+        if 'coupon_url' not in cols:
+            conn.execute("ALTER TABLE coupons ADD COLUMN coupon_url TEXT NOT NULL DEFAULT ''")
 
 init_db()
 
