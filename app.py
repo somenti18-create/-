@@ -20,6 +20,7 @@ def init_db():
             prize_desc  TEXT NOT NULL,
             prize_image TEXT NOT NULL,
             prize_color TEXT NOT NULL,
+            coupon_url  TEXT NOT NULL DEFAULT '',
             used        INTEGER DEFAULT 0,
             created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )''')
@@ -40,8 +41,8 @@ def spin():
     code = uuid.uuid4().hex[:6].upper()
     with get_db() as conn:
         conn.execute(
-            "INSERT INTO coupons (code, prize_id, prize_name, prize_desc, prize_image, prize_color) VALUES (?, ?, ?, ?, ?, ?)",
-            (code, result["id"], result["name"], result["description"], result.get("image", ""), result.get("color", "#333"))
+            "INSERT INTO coupons (code, prize_id, prize_name, prize_desc, prize_image, prize_color, coupon_url) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (code, result["id"], result["name"], result["description"], result.get("image", ""), result.get("color", "#333"), result.get("coupon_url", ""))
         )
 
     return jsonify({**result, "coupon_code": code})

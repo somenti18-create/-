@@ -9,9 +9,9 @@ PRIZES = [
     {
         "id":          "jackpot",
         "name":        "大当たり",
-        "description": "【デカ盛りチャレンジ出場】\nスタッフにお声がけください。",
+        "description": "【デカ盛りチャレンジ出場】\n日程調整のためLINEでご連絡ください！",
         "weight":      10,
-        "coupon_url":  "",
+        "coupon_url":  "https://lin.ee/QoQbkNz",
         "color":       "#FF4500",
         "emoji":       "",
         "image":       "/static/dekamori.jpg",
