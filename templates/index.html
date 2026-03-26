@@ -721,6 +721,9 @@ let spinning = false;
 function spin() {
   if (spinning) return;
   spinning = true;
+  // 「始めいッ！」SE
+  const hajime = new Audio('/static/hajime.mp3');
+  hajime.play().catch(() => {});
   startBGM();
 
   const ball = document.getElementById('ball');
