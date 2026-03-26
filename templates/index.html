@@ -350,8 +350,6 @@
     <div class="result-name"  id="rName"></div>
     <div class="result-desc"  id="rDesc"></div>
     <button class="copy-btn" id="copyBtn" onclick="copyCouponUrl()">クーポンURLをコピー 📋</button>
-    <button class="receive-btn" id="receiveBtn" onclick="receiveInStore()">その場で受け取る 🎁</button>
-    <button class="close-btn" onclick="closeResult()">閉じる</button>
   </div>
 </div>
 
@@ -864,9 +862,9 @@ function copyCouponUrl() {
   navigator.clipboard.writeText(url).then(() => {
     const btn = document.getElementById('copyBtn');
     btn.textContent = 'コピーしました ✅';
-    setTimeout(() => { btn.textContent = 'クーポンURLをコピー 📋'; }, 2000);
+    setTimeout(() => closeResult(), 1500);
   }).catch(() => {
-    prompt('このURLを保存してください', location.origin + '/coupon/' + currentCouponCode);
+    prompt('このURLを保存してください', url);
   });
 }
 
