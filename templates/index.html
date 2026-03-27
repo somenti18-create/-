@@ -387,11 +387,17 @@
     <div class="result-emoji" id="rEmoji"></div>
     <div class="result-name"  id="rName"></div>
     <div class="result-desc"  id="rDesc"></div>
+    {% if trial_mode %}
     <a href="https://docs.google.com/forms/d/1pAYGnxzkRvi97F8rIRjSPSePP2V2dnXivUl4Nx59wus/viewform" target="_blank" style="display:block;margin:18px 0 8px;background:#FF4500;color:white;padding:16px 20px;border-radius:14px;font-size:17px;font-weight:bold;text-decoration:none;text-align:center;">📝 アンケートに答える（30秒）</a>
     <p style="color:#aaa;font-size:12px;margin-top:4px;">※お試し版のため景品の受け取りはできません</p>
     <div id="couponNotice" style="display:none"></div>
     <button id="copyBtn" style="display:none" disabled></button>
     <a id="lineBtn" href="https://lin.ee/QoQbkNz" target="_blank" style="display:none">LINEで日程を連絡する 💬</a>
+    {% else %}
+    <div class="coupon-notice" id="couponNotice">⚠️ 店舗での受け取りにはこのURLが必要です。必ず保管してください。</div>
+    <button class="copy-btn" id="copyBtn" onclick="copyCouponUrl()">クーポンURLをコピー 📋</button>
+    <a class="line-result-btn" id="lineBtn" href="https://lin.ee/QoQbkNz" target="_blank" style="display:none">LINEで日程を連絡する 💬</a>
+    {% endif %}
   </div>
 </div>
 
@@ -885,9 +891,22 @@ function spin() {
         const copyBtn  = document.getElementById('copyBtn');
         const lineBtn  = document.getElementById('lineBtn');
         const notice   = document.getElementById('couponNotice');
+        {% if trial_mode %}
         copyBtn.style.display  = 'none';
         notice.style.display   = 'none';
         lineBtn.style.display  = 'none';
+        {% else %}
+        if (result.id === 'jackpot') {
+          copyBtn.style.display  = 'none';
+          notice.style.display   = 'none';
+          lineBtn.style.display  = 'block';
+        } else {
+          copyBtn.style.display  = 'block';
+          notice.style.display   = 'block';
+          lineBtn.style.display  = 'none';
+          copyBtn.textContent    = 'クーポンURLをコピー 📋';
+        }
+        {% endif %}
 
         document.getElementById('overlay').classList.add('show');
         btn.disabled    = false;

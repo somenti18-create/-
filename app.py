@@ -1,6 +1,6 @@
 import random, sqlite3, uuid, os
 from flask import Flask, render_template, jsonify, request, abort
-from config import PRIZES, STAFF_PIN
+from config import PRIZES, STAFF_PIN, TRIAL_MODE
 
 app = Flask(__name__)
 
@@ -40,7 +40,7 @@ init_db()
 
 @app.route("/")
 def index():
-    return render_template("index.html", prizes=PRIZES)
+    return render_template("index.html", prizes=PRIZES, trial_mode=TRIAL_MODE)
 
 
 @app.route("/spin", methods=["POST"])
